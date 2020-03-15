@@ -57,7 +57,7 @@ exports.update = asyncHandler(async (req, res, next) => {
 // @route   DELETE /api/v1/bootcamps/:id
 // @access  Private
 exports.remove = asyncHandler(async (req, res, next) => {
-  await Bootcamp.findByIdAndDelete(req.params.id);
+  const bootcamp = await Bootcamp.findByIdAndDelete(req.params.id);
 
   if (!bootcamp) {
     return next(

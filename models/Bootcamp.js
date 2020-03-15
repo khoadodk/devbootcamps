@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 const slugify = require("slugify");
 
+const geoCoder = require("../utils/geocoder");
+
 const BootcampSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -26,7 +28,7 @@ const BootcampSchema = new mongoose.Schema({
   email: {
     type: String,
     match: [
-      /	^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})$/,
+      /^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})$/,
       "Please add a valid email"
     ]
   },
@@ -82,6 +84,26 @@ const BootcampSchema = new mongoose.Schema({
 BootcampSchema.pre("save", function() {
   console.log("Slugify ran", this.name);
   this.slug = slugify(this.name, { lower: true });
+  next();
+});
+
+// Geocode & create location field
+// https://www.npmjs.com/package/node-geocoder
+BootcampSchema.pre("save", async function(next) {
+  // Get the address from input
+  const loc = await geoCoder.geocode(this.address);
+  // set the location
+  this.location = {
+    type: "Point",
+    coordinates: [loc[0].longitude, loc[0].latitude],
+    formattedAddress: loc[0].formattedAddress,
+    street: loc[0].streetName,
+    city: loc[0].city,
+    state: loc[0].stateCode,
+    zipcode: loc[0].zipcode,
+    country: loc[0].country
+  };
+
   next();
 });
 
