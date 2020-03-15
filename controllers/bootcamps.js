@@ -1,5 +1,6 @@
 const Bootcamp = require("../models/Bootcamp");
 
+const geoCoder = require("../utils/geocoder");
 const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middlewares/async");
 
@@ -7,8 +8,36 @@ const asyncHandler = require("../middlewares/async");
 // @route   GET /api/v1/bootcamps
 // @access   Public
 exports.getAll = asyncHandler(async (req, res, next) => {
-  const bootcamps = await Bootcamp.find();
-  res.status(200).json({ success: true, data: bootcamps });
+  console.log(req.query);
+  let query;
+  const reqQuery = { ...req.query };
+
+  // Field to exclude
+  const removeFields = ["select", "sort"];
+  // Remove the key from queryString to do mongoose methods
+  removeFields.forEach(params => delete reqQuery[params]);
+
+  // Because query does not have $ so we have to add $ to query for mongoose method
+  let queryStr = JSON.stringify(reqQuery);
+  queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
+  query = Bootcamp.find(JSON.parse(queryStr));
+
+  if (req.query.select) {
+    // querystring ={name,age}  to mongoose method=["name age"]
+    const fields = req.query.select.split(",").join(" ");
+    query = query.select(fields);
+  }
+  if (req.query.sort) {
+    const sortBy = req.query.sort.split(",").join(" ");
+    query = query.sort(sortBy);
+  } else {
+    query = query.sort("-createdAt");
+  }
+
+  const bootcamps = await query;
+  res
+    .status(200)
+    .json({ success: true, count: bootcamps.length, data: bootcamps });
 });
 
 // @desc    Get single bootcamp
@@ -66,4 +95,24 @@ exports.remove = asyncHandler(async (req, res, next) => {
   }
 
   res.status(200).json({ success: true });
+});
+
+// @desc    Get all bootcamps within radius
+// @route   GET /api/v1/bootcamps/radius/:zipcode/:distance
+// @access   Public
+exports.getWithinRadius = asyncHandler(async (req, res, next) => {
+  const { zipcode, distance } = req.params;
+  const loc = await geoCoder.geocode(zipcode);
+  const lat = loc[0].latitude;
+  const lng = loc[0].longitude;
+
+  // Calc raidus using radians by dividing dist by radis of Earth
+  // Earth r = 3962 mi or 6378.1 km
+  const radius = distance / 3963;
+
+  const bootcamps = await Bootcamp.find({
+    location: { $geoWithin: { $centerSphere: [[lng, lat], radius] } }
+  });
+
+  res.status(200).json({ success: true, data: bootcamps });
 });

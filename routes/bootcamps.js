@@ -6,8 +6,11 @@ const {
   getSingle,
   create,
   update,
-  remove
+  remove,
+  getWithinRadius
 } = require("../controllers/bootcamps");
+
+router.route("/radius/:zipcode/:distance").get(getWithinRadius);
 
 router
   .route("/")
