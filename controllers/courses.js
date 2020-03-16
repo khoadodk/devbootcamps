@@ -87,7 +87,7 @@ exports.updateCourse = asyncHandler(async (req, res, next) => {
 // @desc    Delete a course
 // @route   DELETE /api/v1/courses/:id
 // @access   Private
-exports.updateCourse = asyncHandler(async (req, res, next) => {
+exports.deleteCourse = asyncHandler(async (req, res, next) => {
   let course = await Course.findById(req.params.id);
 
   if (!course) {
