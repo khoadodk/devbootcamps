@@ -33,6 +33,7 @@ router
   .route("/")
   .get(advancedResults(Bootcamp, "courses"), getAll)
   .post(protect, authorize("publisher", "admin"), create);
+
 router
   .route("/:id")
   .get(getSingle)
