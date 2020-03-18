@@ -146,7 +146,7 @@ exports.photoUpload = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse("Please upload a file", 400));
   }
 
-  console.log(req.files.file);
+  console.log("PHOTO UPLOAD", req.files.file);
 
   const file = req.files.file;
   // Check file image type

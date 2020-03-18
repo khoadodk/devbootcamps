@@ -9,9 +9,11 @@ const advancedResults = require("../middlewares/advancedResults");
 
 // Other Resources
 const courseRouter = require("./courses");
+const reviewRouter = require("./reviews");
 
 // Reroute into other routers
 router.use("/:bootcampId/courses", courseRouter);
+router.use("/:bootcampId/reviews", reviewRouter);
 
 const {
   getAll,
